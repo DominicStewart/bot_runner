@@ -46,7 +46,9 @@ class RoomRequest:
 
 
 class RoomManager:
-    def __init__(self, daily_helpers: Dict[str, DailyRESTHelper], room_url: Optional[str] = None):
+    def __init__(
+        self, daily_helpers: Dict[str, DailyRESTHelper], room_url: Optional[str] = None
+    ):
         self.daily_helpers = daily_helpers
         self.room_url = room_url
         self.operator_number = "+12097844759"  # Consider moving this to config
@@ -85,20 +87,27 @@ class RoomManager:
             }
 
         # Get token for the room
-        token = await self.daily_helpers["rest"].get_token(room.url, self.max_session_time)
+        token = await self.daily_helpers["rest"].get_token(
+            room.url, self.max_session_time
+        )
         if not token:
             raise HTTPException(status_code=500, detail="Failed to get room token")
 
         # Only spawn bot for non-operator rooms
         if room_type != RoomType.OPERATOR_ROOM:
-            await self._spawn_bot(room=room, token=token, request=request, room_type=room_type)
+            await self._spawn_bot(
+                room=room, token=token, request=request, room_type=room_type
+            )
         return result
 
     async def _create_operator_room(self) -> DailyRoomObject:
         """Create a room specifically for operator handling."""
         properties = DailyRoomProperties(
             sip=DailyRoomSipParams(
-                display_name="operator-user", video=False, sip_mode="dial-in", num_endpoints=1
+                display_name="operator-user",
+                video=False,
+                sip_mode="dial-in",
+                num_endpoints=1,
             )
         )
         return await self._create_or_get_room(properties)
@@ -109,7 +118,10 @@ class RoomManager:
         """Create a standard room with appropriate properties."""
         properties = DailyRoomProperties(
             sip=DailyRoomSipParams(
-                display_name="dialin-user", video=False, sip_mode="dial-in", num_endpoints=1
+                display_name="dialin-user",
+                video=False,
+                sip_mode="dial-in",
+                num_endpoints=1,
             )
         )
 
@@ -123,7 +135,9 @@ class RoomManager:
 
         return await self._create_or_get_room(properties)
 
-    async def _create_or_get_room(self, properties: DailyRoomProperties) -> DailyRoomObject:
+    async def _create_or_get_room(
+        self, properties: DailyRoomProperties
+    ) -> DailyRoomObject:
         """Create a new room or get existing one based on URL."""
         if not self.room_url:
             params = DailyRoomParams(properties=properties)
@@ -138,7 +152,11 @@ class RoomManager:
             )
 
     async def _spawn_bot(
-        self, room: DailyRoomObject, token: str, request: RoomRequest, room_type: RoomType
+        self,
+        room: DailyRoomObject,
+        token: str,
+        request: RoomRequest,
+        room_type: RoomType,
     ) -> None:
         """Spawn the appropriate bot for the room."""
         # Check required parameters
@@ -157,8 +175,12 @@ class RoomManager:
                 )
 
         # Get the parent directory (where bot_daily.py is located)
-        current_dir = os.path.dirname(os.path.abspath(__file__))  # Gets runner_code directory
-        parent_dir = os.path.dirname(current_dir)  # Gets the directory containing bot_daily.py
+        current_dir = os.path.dirname(
+            os.path.abspath(__file__)
+        )  # Gets runner_code directory
+        parent_dir = os.path.dirname(
+            current_dir
+        )  # Gets the directory containing bot_daily.py
 
         # Construct command with required arguments
         bot_cmd = [
@@ -185,4 +207,6 @@ class RoomManager:
         try:
             subprocess.Popen(bot_cmd, cwd=os.path.dirname(os.path.abspath(__file__)))
         except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Failed to start bot: {str(e)}")
+            raise HTTPException(
+                status_code=500, detail=f"Failed to start bot: {str(e)}"
+            )
